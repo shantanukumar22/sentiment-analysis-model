@@ -1,20 +1,43 @@
 import json
-from utils.dataset_loader import load_dataset
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+def load_data():
+    # Load dataset directly from URL
+    url = "https://raw.githubusercontent.com/ageron/handson-ml/master/datasets/housing/housing.csv"
+    df = pd.read_csv(url)
+
+    # Basic preprocessing
+    df = df.dropna()              # remove missing values
+    df = pd.get_dummies(df, columns=["ocean_proximity"], drop_first=True)
+
+    # Split features and target
+    X = df.drop("median_house_value", axis=1)
+    y = df["median_house_value"]
+
+    return train_test_split(X, y, test_size=0.2, random_state=42)
 
 def train():
-    # TODO: Load your dataset
-    X_train, X_test, y_train, y_test = load_dataset()
+    # Load dataset
+    X_train, X_test, y_train, y_test = load_data()
 
-    # TODO: Create and train your model
-    # model = ...
-    # model.fit(X_train, y_train)
+    # Train a simple regression model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
 
-    # TODO: Evaluate your model properly
-    accuracy = 0.0  # Replace with your actual accuracy
+    # Predict
+    y_pred = model.predict(X_test)
 
-    # Save metrics for validator
+    # Evaluate using R² score as "accuracy"
+    accuracy = r2_score(y_test, y_pred)
+
+    # Save metrics.json
     with open("metrics.json", "w") as f:
-        json.dump({"accuracy": accuracy}, f)
+        json.dump({"accuracy": float(accuracy)}, f, indent=2)
+
+    print(f"Training complete! R2 Score (accuracy): {accuracy:.4f}")
 
 if __name__ == "__main__":
     train()
